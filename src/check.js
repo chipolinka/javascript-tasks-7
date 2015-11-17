@@ -39,7 +39,6 @@ function getCheckMethods() {
             var objKeys = getKeysWithoutType(this);
             return isInList(keys, objKeys);
         },
-
         hasKeys: function (keys) {
             if (!isCorrectPrototype(this, [Array.prototype, Object.prototype])) {
                 return undefined;
@@ -50,7 +49,6 @@ function getCheckMethods() {
             }
             return false;
         },
-
         containsValues: function (values) {
             if (!isCorrectPrototype(this, [Array.prototype, Object.prototype])) {
                 return undefined;
@@ -58,7 +56,6 @@ function getCheckMethods() {
             var objValues = getValuesWithoutType(this);
             return isInList(values, objValues);
         },
-
         hasValues: function (values) {
             if (!isCorrectPrototype(this, [Array.prototype, Object.prototype])) {
                 return undefined;
@@ -69,7 +66,6 @@ function getCheckMethods() {
             }
             return false;
         },
-
         hasValueType: function (key, type) {
             if (!isCorrectPrototype(this, [Array.prototype, Object.prototype])) {
                 return undefined;
@@ -79,21 +75,18 @@ function getCheckMethods() {
             var index = keys.indexOf(key);
             return typeof values[index] === typeof type();
         },
-
         hasLength: function (length) {
             if (!isCorrectPrototype(this, [Array.prototype, String.prototype])) {
                 return undefined;
             }
             return length == this.length;
         },
-
         hasParamsCount: function (count) {
             if (!isCorrectPrototype(this, [Function.prototype])) {
                 return undefined;
             }
             return count == this.length;
         },
-
         hasWordsCount: function (count) {
             if (!isCorrectPrototype(this, [String.prototype])) {
                 return undefined;
