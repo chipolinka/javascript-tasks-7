@@ -1,20 +1,86 @@
 'use strict';
 
+var checkMethods = {
+    containsKeys: function (keys) {
+        if (!(isArray(this) || isObject(this))) {
+            return undefined;
+        }
+        var objKeys = getKeysWithoutType(this);
+        return isInList(keys, objKeys);
+    },
+    hasKeys: function (keys) {
+        if (!(isArray(this) || isObject(this))) {
+            return undefined;
+        }
+        var objKeys = getKeysWithoutType(this);
+        if (objKeys.length == keys.length) {
+            return isInList(keys, objKeys);
+        }
+        return false;
+    },
+    containsValues: function (values) {
+        if (!(isArray(this) || isObject(this))) {
+            return undefined;
+        }
+        var objValues = getValuesWithoutType(this);
+        return isInList(values, objValues);
+    },
+    hasValues: function (values) {
+        if (!(isArray(this) || isObject(this))) {
+            return undefined;
+        }
+        var objValues = getValuesWithoutType(this);
+        if (objValues.length == values.length) {
+            return isInList(values, objValues);
+        }
+        return false;
+    },
+    hasValueType: function (key, type) {
+        if (!(isArray(this) || isObject(this))) {
+            return undefined;
+        }
+        var keys = getKeysWithoutType(this);
+        var values = getValuesWithoutType(this);
+        var index = keys.indexOf(key);
+        return typeof values[index] === typeof type();
+    },
+    hasLength: function (length) {
+        if (!(isArray(this) || isString(this))) {
+            return undefined;
+        }
+        return length == this.length;
+    },
+    hasParamsCount: function (count) {
+        if (!isFunction(this)) {
+            return undefined;
+        }
+        return count == this.length;
+    },
+    hasWordsCount: function (count) {
+        if (!isString(this)) {
+            return undefined;
+        }
+        return count == this.split(' ').length;
+    }
+};
+
 exports.init = function () {
     Object.defineProperty(Object.prototype, 'check', {
         get: function () {
-            var methodsCheck = getCheckMethods.bind(this)();
-            for (var method in methodsCheck) {
-                methodsCheck[method] = methodsCheck[method].bind(this);
+            var result = {};
+            for (var method in checkMethods) {
+                if (isFunction(checkMethods[method])) {
+                    result[method] = checkMethods[method].bind(this);
+                }
             }
-            methodsCheck = getNotMethods.bind(this)(methodsCheck);
+            result.not = {};
+            var methodsCheck = getNotMethods(checkMethods);
             for (var method in methodsCheck.not) {
-                methodsCheck.not[method] = methodsCheck.not[method].bind(this);
+                result.not[method] = methodsCheck.not[method].bind(this);
             }
-            return methodsCheck;
+            return result;
         }
     });
-    return this;
 };
 
 module.exports.wrap = function (obj) {
@@ -30,100 +96,16 @@ function isNull() {
     return this == null;
 }
 
-function getCheckMethods() {
-    var methods = {
-        containsKeys: function (keys) {
-            if (!isCorrectPrototype(this, [Array.prototype, Object.prototype])) {
-                return undefined;
-            }
-            var objKeys = getKeysWithoutType(this);
-            return isInList(keys, objKeys);
-        },
-        hasKeys: function (keys) {
-            if (!isCorrectPrototype(this, [Array.prototype, Object.prototype])) {
-                return undefined;
-            }
-            var objKeys = getKeysWithoutType(this);
-            if (objKeys.length == keys.length) {
-                return isInList(keys, objKeys);
-            }
-            return false;
-        },
-        containsValues: function (values) {
-            if (!isCorrectPrototype(this, [Array.prototype, Object.prototype])) {
-                return undefined;
-            }
-            var objValues = getValuesWithoutType(this);
-            return isInList(values, objValues);
-        },
-        hasValues: function (values) {
-            if (!isCorrectPrototype(this, [Array.prototype, Object.prototype])) {
-                return undefined;
-            }
-            var objValues = getValuesWithoutType(this);
-            if (objValues.length == values.length) {
-                return isInList(values, objValues);
-            }
-            return false;
-        },
-        hasValueType: function (key, type) {
-            if (!isCorrectPrototype(this, [Array.prototype, Object.prototype])) {
-                return undefined;
-            }
-            var keys = getKeysWithoutType(this);
-            var values = getValuesWithoutType(this);
-            var index = keys.indexOf(key);
-            return typeof values[index] === typeof type();
-        },
-        hasLength: function (length) {
-            if (!isCorrectPrototype(this, [Array.prototype, String.prototype])) {
-                return undefined;
-            }
-            return length == this.length;
-        },
-        hasParamsCount: function (count) {
-            if (!isCorrectPrototype(this, [Function.prototype])) {
-                return undefined;
-            }
-            return count == this.length;
-        },
-        hasWordsCount: function (count) {
-            if (!isCorrectPrototype(this, [String.prototype])) {
-                return undefined;
-            }
-            return count == this.split(' ').length;
-        }
-    };
-    return methods;
-}
-
 function getNotMethods(methods) {
-    methods.not = {
-        containsKeys: function (keys) {
-            return !getCheckMethods().containsKeys.bind(this)(keys);
-        },
-        hasKeys: function (keys) {
-            return !getCheckMethods().hasKeys.bind(this)(keys);
-        },
-        containsValues: function (values) {
-            return !getCheckMethods().containsValues.bind(this)(values);
-        },
-        hasValues: function (values) {
-            return !getCheckMethods().hasValues.bind(this)(values);
-        },
-        hasValueType: function (key, type) {
-            return !getCheckMethods().hasValueType.bind(this)(key, type);
-        },
-        hasLength: function (length) {
-            return !getCheckMethods().hasLength.bind(this)(length);
-        },
-        hasParamsCount: function (count) {
-            return !getCheckMethods().hasParamsCount.bind(this)(count);
-        },
-        hasWordsCount: function (count) {
-            return !getCheckMethods().hasWordsCount.bind(this)(count);
+    methods.not = {};
+    for (var method in checkMethods) {
+        if (checkMethods.hasOwnProperty(method)) {
+            methods.not[method] = function () {
+                console.log(this);
+                return !checkMethods[method].bind(this)();
+            }.bind(this);
         }
-    };
+    }
     return methods;
 }
 
@@ -138,7 +120,7 @@ function isInList(list1, list2) {
 
 function getKeysWithoutType(obj) {
     var objKeys = Object.keys(obj);
-    if (Object.getPrototypeOf(obj) == Array.prototype) {
+    if (isArray(obj)) {
         objKeys = [];
         for (var item in obj) {
             objKeys.push(item);
@@ -149,7 +131,7 @@ function getKeysWithoutType(obj) {
 
 function getValuesWithoutType(obj) {
     var values = [];
-    if (Object.getPrototypeOf(obj) == Array.prototype) {
+    if (isArray(obj)) {
         values = obj;
     } else {
         values = getObjectValues(obj);
@@ -167,9 +149,18 @@ function getObjectValues(obj) {
     return values;
 }
 
-function isCorrectPrototype(obj, corrects) {
-    if (corrects.indexOf(Object.getPrototypeOf(obj)) == -1) {
-        return false;
-    }
-    return true;
+function isFunction(obj) {
+    return Object.getPrototypeOf(obj) == Function.prototype;
+}
+
+function isArray(obj) {
+    return Object.getPrototypeOf(obj) == Array.prototype;
+}
+
+function isObject(obj) {
+    return Object.getPrototypeOf(obj) == Object.prototype;
+}
+
+function isString(obj) {
+    return Object.getPrototypeOf(obj) == String.prototype;
 }
