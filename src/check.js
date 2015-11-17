@@ -101,7 +101,6 @@ function getNotMethods(methods) {
     for (var method in checkMethods) {
         if (checkMethods.hasOwnProperty(method)) {
             methods.not[method] = function () {
-                console.log(this);
                 return !checkMethods[method].bind(this)();
             }.bind(this);
         }
